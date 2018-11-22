@@ -10,6 +10,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
@@ -23,542 +24,633 @@ import java.util.Stack;
  */
 public class BinarySearchTree<E extends Comparable<? super E>> {
 
-    private BSTNode<E> root;
-    private int size;
-    // CS314 students. Add any other instance variables you want here
+	private BSTNode<E> root;
+	private int size;
 
-    // CS314 students. Add a default constructor here.
-    
-    /**
-     * Default Constructor, creates an empty BinarySearchTree. 
-     */
-    public BinarySearchTree() {
-    	
-    }
+	/**
+	 * Default Constructor, creates an empty BinarySearchTree. 
+	 * all instance variables are already initialized to null or 0
+	 */
+	public BinarySearchTree() {
+		size = 0;
+		root = null;
+	}
 
-    /**
-     *  Add the specified item to this Binary Search Tree if it is not already present.
-     *  <br>
-     *  pre: <tt>value</tt> != null<br>
-     *  post: Add value to this tree if not already present. Return true if this tree
-     *  changed as a result of this method call, false otherwise.
-     *  @param value the value to add to the tree
-     *  @return false if an item equivalent to value is already present
-     *  in the tree, return true if value is added to the tree and size() = old size() + 1
-     */
-    public boolean add(E value) {
-    	// if the root is null, this is an empty BST
-    	if (this.root == null) {
-    		this.root = new BSTNode<>(value);
-    		size++;
-    		return true;
-    	} else {
-	    	// call a helper method, and send in our current Root and the value
-	    	return addHelper(this.root, value);
-    	}
-    }
-    
-    public boolean addHelper(BSTNode<E> node, E value) {  
-    	// compare the roots data to the value, and move left or right accordingly.  
-    	if (node.data.compareTo(value) == 0) {
-    		// value is in the tree, do nothing. 
-    		return false;
-    	} else if (value.compareTo(node.data) < 0) {
-    		if (node.left == null) {
-    			node.left = new BSTNode<>(value);
-    			size++;
-    			return true;
-    		}
-    		return addHelper(node.left, value);
-    	} else {
-    		if (node.right == null) {
-    			node.right = new BSTNode<>(value);
-    			size++;
-    			return true;
-    		}
-    		return addHelper(node.right, value);
-    	}
-    }
+	/**
+	 *  Add the specified item to this Binary Search Tree if it is not already present.
+	 *  <br>
+	 *  pre: <tt>value</tt> != null<br>
+	 *  post: Add value to this tree if not already present. Return true if this tree
+	 *  changed as a result of this method call, false otherwise.
+	 *  @param value the value to add to the tree
+	 *  @return false if an item equivalent to value is already present
+	 *  in the tree, return true if value is added to the tree and size() = old size() + 1
+	 */
+	public boolean add(E value) {
+		// if the root is null, this is an empty BST
+		if (this.root == null) {
+			this.root = new BSTNode<>(value);
+			size++;
+			return true;
+		} else {
+			// call a helper method, and send in our current Root and the value
+			return addHelper(this.root, value);
+		}
+	}
 
-    /**
-     *  Remove a specified item from this Binary Search Tree if it is present.
-     *  <br>
-     *  pre: <tt>value</tt> != null<br>
-     *  post: Remove value from the tree if present, return true if this tree
-     *  changed as a result of this method call, false otherwise.
-     *  @param value the value to remove from the tree if present
-     *  @return false if value was not present
-     *  returns true if value was present and size() = old size() - 1
-     */
-    public boolean remove(E value) {
-    	if (value == null) {
-    		throw new IllegalArgumentException("Violation of preconditions");
-    	}
-    	if (this.root == null) {
-    		// tree is empty, can't remove it. 
-    		return false;
-    	}
-        return removeHelper(this.root, value);
-    }
-    
-    private boolean removeHelper(BSTNode<E> node, E value) {
-    	BSTNode<E> nodeToRemove = getNodeToRemove(node, value);
-    	// case one, the node we want to remove is childless
-    	if (nodeToRemove == null) {
-    		// means the value to remove is not in the tree, can't remove something thats not in the tree
-    		return false;
-    	} else {
-    		if (nodeToRemove.left == null && nodeToRemove.right == null) {
-    			// this is a leaf node, use parent to remove it. 
-    			BSTNode<E> parent = getParent(this.root, value);
-    			if (parent.right != null && parent.right.data.equals(nodeToRemove.data)) {
-    				parent.right = null;
-    			} else {
-    				parent.left = null;
-    			}
-    		} else if (nodeToRemove.left == null || nodeToRemove.right == null) {
-    			// this is a node with a single child, swap the child and the parent
-    			E temp = nodeToRemove.left != null ? nodeToRemove.left.data : nodeToRemove.right.data;
-    			nodeToRemove.data = temp;
-    			nodeToRemove.left = null;
-    			nodeToRemove.right = null;
-    		} else {
-    			// this node has two children, swap with the largest value in the left subtree. 
-    			E newValue = maxSubtree(nodeToRemove.left);
-    			nodeToRemove.data = newValue;
-    			return removeHelper(nodeToRemove.left, newValue);
-    		}
-    		size--;
-    		return true;
-    	}
-    }
-    
-    private E maxSubtree(BSTNode<E> node) {
-    	BSTNode<E> temp = node;
-    	// go to the right most subtree to get the max value
-    	while (temp.right != null) {
-    		temp = temp.right;
-    	}
-        return temp.data;
-    }
-    
-    /**
-     * 
-     * @param value is the data of the Node that we are searching for
-     * @return the node we're looking to remove
-     */
-    private BSTNode<E> getNodeToRemove(BSTNode<E> node, E value) {
-    	if (node == null) {
-    		// We fell off the tree, the node to remove isnt here. 
-    		return null;
-    	} else if (node.data.compareTo(value) == 0) {
-    		// We found the node we want to remove
-    		return node;
-    	} else if (value.compareTo(node.data) < 0) {
-    		return getNodeToRemove(node.left, value);
-    	} else {
-    		return getNodeToRemove(node.right, value);
-    	}
-    }
-    
-    private BSTNode<E> getParent(BSTNode<E> node, E value) {
-    	if (node == null) {
-    		// We fell off the tree, the node to remove isnt here. 
-    		return null;
-    	} 
-    	if (node.data.equals(this.root.data)) {
-    		return this.root;
-    	}
-    	if (value.compareTo(node.data) < 0) {
-    		if (node.left != null && value.compareTo(node.left.data) == 0) {
-    			return node;
-    		}
-    		return getParent(node.left, value);
-    	} else {
-    		if (node.right != null && value.compareTo(node.left.data) == 0) {
-    			return node;
-    		}
-    		return getParent(node.right, value);
-    	}
-    } 
+	/*
+	 * Private helper method that adds a node into our tree
+	 */
+	public boolean addHelper(BSTNode<E> node, E value) {  
+		// compare the roots data to the value, and move left or right accordingly.  
+		if (node.data.compareTo(value) == 0) {
+			// value is in the tree, do nothing. 
+			return false;
+		} else if (value.compareTo(node.data) < 0) {
+			if (node.left == null) {
+				node.left = new BSTNode<>(value);
+				size++;
+				return true;
+			}
+			return addHelper(node.left, value);
+		} else {
+			if (node.right == null) {
+				node.right = new BSTNode<>(value);
+				size++;
+				return true;
+			}
+			return addHelper(node.right, value);
+		}
+	}
 
+	/**
+	 *  Remove a specified item from this Binary Search Tree if it is present.
+	 *  <br>
+	 *  pre: <tt>value</tt> != null<br>
+	 *  post: Remove value from the tree if present, return true if this tree
+	 *  changed as a result of this method call, false otherwise.
+	 *  @param value the value to remove from the tree if present
+	 *  @return false if value was not present
+	 *  returns true if value was present and size() = old size() - 1
+	 */
+	public boolean remove(E value) {
+		if (value == null) {
+			throw new IllegalArgumentException("Violation of preconditions");
+		}
+		if (this.root == null) {
+			// tree is empty, can't remove it. 
+			return false;
+		}
+		return removeHelper(this.root, value);
+	}
 
-    /**
-     *  Check to see if the specified element is in this Binary Search Tree.
-     *  <br>
-     *  pre: <tt>value</tt> != null<br>
-     *  post: return true if value is present in tree, false otherwise
-     *  @param value the value to look for in the tree
-     *  @return true if value is present in this tree, false otherwise
-     */
-    public boolean isPresent(E value) {
-        return isPresentHelper(this.root, value);
-    }
-    
-    public boolean isPresentHelper(BSTNode<E> node, E value) {
-    	// base case, the node is null, meaning the data is not in the tree 
-    	if (node == null) {
-    		return false;
-    	} else {
-    		if (value.compareTo(node.data) == 0) {
-    			// this is the value we were looking for!
-    			return true;
-    		} else if (value.compareTo(node.data) < 0) {
-    			// check the left subtree
-    			return isPresentHelper(node.left, value);
-    		} else {
-    			// check the right subtree
-    			return isPresentHelper(node.right, value);
-    		}
-    	}
-    }
+	/*
+	 * Private helper method that removes a node from our tree
+	 */
+	private boolean removeHelper(BSTNode<E> node, E value) {
+		BSTNode<E> nodeToRemove = getNodeToRemove(node, value);
+		// case one, the node we want to remove is childless
+		if (nodeToRemove == null) {
+			// means the value to remove is not in the tree, can't remove something thats not in the tree
+			return false;
+		} else {
+			if (nodeToRemove.left == null && nodeToRemove.right == null) {
+				// this is a leaf node, use parent to remove it. 
+				BSTNode<E> parent = getParent(this.root, value);
+				// make parent set this node to null
+				if (parent.right != null && parent.right.data.equals(nodeToRemove.data)) {
+					parent.right = null;
+				} else {
+					parent.left = null;
+				}
+			} else if (nodeToRemove.left == null || nodeToRemove.right == null) {
+				// this is a node with a single child, swap the child and the parent
+				E temp = nodeToRemove.left != null ? nodeToRemove.left.data : nodeToRemove.right.data;
+				nodeToRemove.data = temp;
+				// make the node have no childrens. 
+				nodeToRemove.left = null;
+				nodeToRemove.right = null;
+			} else {
+				// this node has two children, swap with the largest value in the left subtree. 
+				E newValue = maxSubtree(nodeToRemove.left);
+				nodeToRemove.data = newValue;
+				// remove the old value that we just swapped
+				return removeHelper(nodeToRemove.left, newValue);
+			}
+			size--;
+			return true;
+		}
+	}
+
+	/*
+	 * Returns the max value of a given subtree
+	 */
+	private E maxSubtree(BSTNode<E> node) {
+		BSTNode<E> temp = node;
+		// go to the right most subtree to get the max value
+		while (temp.right != null) {
+			temp = temp.right;
+		}
+		return temp.data;
+	}
+
+	/**
+	 * 
+	 * @param value is the data of the Node that we are searching for
+	 * @return the node we're looking to remove
+	 */
+	private BSTNode<E> getNodeToRemove(BSTNode<E> node, E value) {
+		if (node == null) {
+			// We fell off the tree, the node to remove isnt here. 
+			return null;
+		} else if (node.data.compareTo(value) == 0) {
+			// We found the node we want to remove
+			return node;
+		} else if (value.compareTo(node.data) < 0) {
+			return getNodeToRemove(node.left, value);
+		} else {
+			return getNodeToRemove(node.right, value);
+		}
+	}
+
+	/*
+	 * private helper method that returns the parent of a specified node
+	 */
+	private BSTNode<E> getParent(BSTNode<E> node, E value) {
+		if (node == null) {
+			// We fell off the tree, the node to remove isnt here. 
+			return null;
+		} 
+		if (node.data.equals(this.root.data)) {
+			return this.root;
+		}
+		if (value.compareTo(node.data) < 0) {
+			if (node.left != null && value.compareTo(node.left.data) == 0) {
+				return node;
+			}
+			return getParent(node.left, value);
+		} else {
+			if (node.right != null && value.compareTo(node.left.data) == 0) {
+				return node;
+			}
+			return getParent(node.right, value);
+		}
+	} 
 
 
-    /**
-     *  Return how many elements are in this Binary Search Tree.
-     *  <br>
-     *  pre: none<br>
-     *  post: return the number of items in this tree
-     *  @return the number of items in this Binary Search Tree
-     */
-    public int size() {
-        return size;
-    }
+	/**
+	 *  Check to see if the specified element is in this Binary Search Tree.
+	 *  <br>
+	 *  pre: <tt>value</tt> != null<br>
+	 *  post: return true if value is present in tree, false otherwise
+	 *  @param value the value to look for in the tree
+	 *  @return true if value is present in this tree, false otherwise
+	 */
+	public boolean isPresent(E value) {
+		return isPresentHelper(this.root, value);
+	}
 
-    /**
-     *  return the height of this Binary Search Tree.
-     *  <br>
-     *  pre: none<br>
-     *  post: return the height of this tree.
-     *  If the tree is empty return -1, otherwise return the
-     *  height of the tree
-     *  @return the height of this tree or -1 if the tree is empty
-     */
-    public int height() {
-    	if (root == null) {
-    		// empty tree, height is -1
-    		return -1;
-    	} else if (root.left == null && root.right == null){
-    		// this is a tree with only one element
-    		return 0;
-    	} else {
-    		// tree has atleast one left or right subtree
-    		return heightHelper(root);
-    	}
-    }
-    
-    private int heightHelper(BSTNode<E> node) {
-    	int result = 0;
-    	if (node == null) {
-    		// we reached a dead end
-    		return 0;
-    	}else if (node.right == null && node.left == null) {
-    		// this is a leaf with no children
-    		return 0; 
-    	} else {
-    		result++;
-    		// check the left and right subtree, and return the one with the greater height
-    		return result + Math.max(heightHelper(node.left), heightHelper(node.right));
-    	}
-    }
-
-    /**
-     *  Return a list of all the elements in this Binary Search Tree.
-     *  <br>
-     *  pre: none<br>
-     *  post: return a List object with all data from the tree in ascending order. 
-     *  If the tree is empty return an empty List
-     *  @return a List object with all data from the tree in sorted order
-     *  if the tree is empty return an empty List
-     */
-    public List<E> getAll() {
-    	ArrayList<E> ascendingBST = new ArrayList<>();
-    	getAllHelper(root, ascendingBST);
-        return ascendingBST;
-    }
-    
-    private void getAllHelper(BSTNode<E> root, ArrayList<E> ascendingBST) {
-    	if (root.left != null) {
-    		getAllHelper(root.left, ascendingBST);
-    	} 
-    	ascendingBST.add(root.data);
-    	if (root.right != null) {
-    		getAllHelper(root.right, ascendingBST);
-    	}
-    }
+	/*
+	 * private helper method that determines if a value is present in the tree by
+	 * traversing it, and if the value is not there, returns false. 
+	 */
+	public boolean isPresentHelper(BSTNode<E> node, E value) {
+		// base case, the node is null, meaning the data is not in the tree 
+		if (node == null) {
+			return false;
+		} else {
+			if (value.compareTo(node.data) == 0) {
+				// this is the value we were looking for!
+				return true;
+			} else if (value.compareTo(node.data) < 0) {
+				// check the left subtree
+				return isPresentHelper(node.left, value);
+			} else {
+				// check the right subtree
+				return isPresentHelper(node.right, value);
+			}
+		}
+	}
 
 
+	/**
+	 *  Return how many elements are in this Binary Search Tree.
+	 *  <br>
+	 *  pre: none<br>
+	 *  post: return the number of items in this tree
+	 *  @return the number of items in this Binary Search Tree
+	 */
+	public int size() {
+		return size;
+	}
 
-    /**
-     * return the maximum value in this binary search tree.
-     * <br>
-     * pre: <tt>size()</tt> > 0<br>
-     * post: return the largest value in this Binary Search Tree
-     * @return the maximum value in this tree
-     */
-    public E max() {
-    	if (size <= 0) {
-    		throw new IllegalArgumentException("Violation of Precondtions");
-    	}
-    	BSTNode<E> temp = root;
-    	// go to the right most subtree to get the max value
-    	while (temp.right != null) {
-    		temp = temp.right;
-    	}
-        return temp.data;
-    }
+	/**
+	 *  return the height of this Binary Search Tree.
+	 *  <br>
+	 *  pre: none<br>
+	 *  post: return the height of this tree.
+	 *  If the tree is empty return -1, otherwise return the
+	 *  height of the tree
+	 *  @return the height of this tree or -1 if the tree is empty
+	 */
+	public int height() {
+		if (root == null) {
+			// empty tree, height is -1
+			return -1;
+		} else if (root.left == null && root.right == null){
+			// this is a tree with only one element
+			return 0;
+		} else {
+			// tree has atleast one left or right subtree
+			return heightHelper(root);
+		}
+	}
 
-    /**
-     * return the minimum value in this binary search tree.
-     * <br>
-     * pre: <tt>size()</tt> > 0<br>
-     * post: return the smallest value in this Binary Search Tree
-     * @return the minimum value in this tree
-     */
-    public E min() {
-    	if (size <= 0) {
-    		throw new IllegalArgumentException("Violation of Precondtions");
-    	}
-    	BSTNode<E> temp = root;
-    	// go to the left most subtree to get the max value
-    	while (temp.left != null) {
-    		temp = temp.left;
-    	}
-        return temp.data;
-    }
+	/*
+	 * private helper method that goes through the tree and determines the height by checking
+	 * the heights of the left and right subtree recursively. 
+	 */
+	private int heightHelper(BSTNode<E> node) {
+		int result = 0;
+		if (node == null) {
+			// we reached a dead end
+			return 0;
+		} else if (node.right == null && node.left == null) {
+			// this is a leaf with no children
+			return 0; 
+		} else {
+			result++;
+			// check the left and right subtree, and return the one with the greater height
+			return result + Math.max(heightHelper(node.left), heightHelper(node.right));
+		}
+	}
 
-    /**
-     * An add method that implements the add algorithm iteratively instead of recursively.
-     * <br>pre: data != null
-     * <br>post: if data is not present add it to the tree, otherwise do nothing.
-     * @param data the item to be added to this tree
-     * @return true if data was not present before this call to add, false otherwise.
-     */
-    public boolean iterativeAdd(E data) {
-    	// base case, empty tree
-    	if (this.root == null) {
-    		root = new BSTNode<>(data);
-    	}
-    	return iterativeAddHelper(data);
-    }
-    
-    private boolean iterativeAddHelper(E data) {
-    	Stack<BSTNode<E>> stack = new Stack<>();
-    	stack.push(root);
-    	while (!stack.isEmpty()) {
-    		BSTNode<E> temp = stack.pop();
-    		if (data.compareTo(temp.data) < 0) {
-    			if (temp.left == null) {
-    				// we found an empty spot
-    				temp.left = new BSTNode<>(data);
-    				size++;
-    				return true;
-    			}
-    			stack.push(temp.left);
-    		} else if (data.compareTo(temp.data) > 0) {
-    			if (temp.right == null) {
-    				// we found an empty spot
-    				temp.right = new BSTNode<>(data);
-    				size++;
-    				return true;
-    			}
-    			stack.push(temp.right);
-    		}
-    	}
-    	// if we're out of the while loop, the item was in our list already
-    	return false;
-    }
+	/**
+	 *  Return a list of all the elements in this Binary Search Tree.
+	 *  <br>
+	 *  pre: none<br>
+	 *  post: return a List object with all data from the tree in ascending order. 
+	 *  If the tree is empty return an empty List
+	 *  @return a List object with all data from the tree in sorted order
+	 *  if the tree is empty return an empty List
+	 */
+	public List<E> getAll() {
+		ArrayList<E> ascendingBST = new ArrayList<>();
+		getAllHelper(root, ascendingBST);
+		return ascendingBST;
+	}
+
+	/*
+	 * a private helper method that performs inorder traversal through the tree
+	 */
+	private void getAllHelper(BSTNode<E> root, ArrayList<E> ascendingBST) {
+		if (root.left != null) {
+			getAllHelper(root.left, ascendingBST);
+		} 
+		ascendingBST.add(root.data);
+		if (root.right != null) {
+			getAllHelper(root.right, ascendingBST);
+		}
+	}
 
 
-    /**
-     * Return the "kth" element in this Binary Search Tree. If kth = 0 the 
-     * smallest value (minimum) is returned. If kth = 1 the second smallest value is
-     * returned, and so forth.
-     * <br>pre: 0 <= kth < size()
-     * @param kth indicates the rank of the element to get
-     * @return the kth value in this Binary Search Tree
-     */
-    public E get(int kth) {
-    	if (kth < 0 || kth >= size()) {
-    		throw new IllegalArgumentException("Violation of Preconditions");
-    	}
-    	ArrayList<E> ascendingBST = new ArrayList<>();
-        return getHelper(this.root, kth, ascendingBST);
-    }
-    
-    private E getHelper(BSTNode<E> node, int index, ArrayList<E> ascendingBST) {
-    	Stack<BSTNode<E>> stack = new Stack<>();
-    	BSTNode<E> temp = this.root;
-    	while (temp != null || !stack.isEmpty()) {
-    		//we gotta go to the left most node first 
-    		while (temp != null) {
-    			stack.push(temp);
-    			temp = temp.left;
-    		}
-    		// we're null now, so we pop the stack and put that value into our arraylist
-    		temp = stack.pop();
-    		ascendingBST.add(temp.data);
-    		// check if we're at the index we want
-    		if (ascendingBST.size() - 1 == index) {
-    			// this is the index we want to return
-    			return ascendingBST.get(index);
-    		}
-    		// move to the right now
-    		temp = temp.right;
-    	}
-    	// one last chance, see if we reached the index. 
+	/**
+	 * return the maximum value in this binary search tree.
+	 * <br>
+	 * pre: <tt>size()</tt> > 0<br>
+	 * post: return the largest value in this Binary Search Tree
+	 * @return the maximum value in this tree
+	 */
+	public E max() {
+		if (size <= 0) {
+			throw new IllegalArgumentException("Violation of Precondtions");
+		}
+		BSTNode<E> temp = root;
+		// go to the right most subtree to get the max value
+		while (temp.right != null) {
+			temp = temp.right;
+		}
+		return temp.data;
+	}
+
+	/**
+	 * return the minimum value in this binary search tree.
+	 * <br>
+	 * pre: <tt>size()</tt> > 0<br>
+	 * post: return the smallest value in this Binary Search Tree
+	 * @return the minimum value in this tree
+	 */
+	public E min() {
+		if (size <= 0) {
+			throw new IllegalArgumentException("Violation of Precondtions");
+		}
+		BSTNode<E> temp = root;
+		// go to the left most subtree to get the max value
+		while (temp.left != null) {
+			temp = temp.left;
+		}
+		return temp.data;
+	}
+
+	/**
+	 * An add method that implements the add algorithm iteratively instead of recursively.
+	 * <br>pre: data != null
+	 * <br>post: if data is not present add it to the tree, otherwise do nothing.
+	 * @param data the item to be added to this tree
+	 * @return true if data was not present before this call to add, false otherwise.
+	 */
+	public boolean iterativeAdd(E data) {
+		// base case, empty tree
+		if (this.root == null) {
+			root = new BSTNode<>(data);
+		}
+		return iterativeAddHelper(data);
+	}
+
+	/*
+	 * Private method that adds a value to the tree without using recursion, rather, it uses an explicit
+	 * stack to store values as we traverse through the tree either searching if the value is already in the
+	 * tree, or if we can find an empty spot to place our value. 
+	 */
+	private boolean iterativeAddHelper(E data) {
+		Stack<BSTNode<E>> stack = new Stack<>();
+		stack.push(root);
+		while (!stack.isEmpty()) {
+			BSTNode<E> temp = stack.pop();
+			if (data.compareTo(temp.data) < 0) {
+				if (temp.left == null) {
+					// we found an empty spot
+					temp.left = new BSTNode<>(data);
+					size++;
+					return true;
+				}
+				// we need to move left, the spot we're looking for is to the left in the tree
+				stack.push(temp.left);
+			} else if (data.compareTo(temp.data) > 0) {
+				if (temp.right == null) {
+					// we found an empty spot
+					temp.right = new BSTNode<>(data);
+					size++;
+					return true;
+				}
+				// we need to move right, the spot we're looking for is to the right in the tree
+				stack.push(temp.right);
+			}
+		}
+		// if we're out of the while loop, the item was in our list already
+		return false;
+	}
+
+
+	/**
+	 * Return the "kth" element in this Binary Search Tree. If kth = 0 the 
+	 * smallest value (minimum) is returned. If kth = 1 the second smallest value is
+	 * returned, and so forth.
+	 * <br>pre: 0 <= kth < size()
+	 * @param kth indicates the rank of the element to get
+	 * @return the kth value in this Binary Search Tree
+	 */
+	public E get(int kth) {
+		if (kth < 0 || kth >= size()) {
+			throw new IllegalArgumentException("Violation of Preconditions");
+		}
+		ArrayList<E> ascendingBST = new ArrayList<>();
+		return getHelper(this.root, kth, ascendingBST);
+	}
+
+	/*
+	 * Private helper function that returns the kth index of a tree by 
+	 * performing an inOrder traversal, and stopping once we hit the kth index
+	 */
+	private E getHelper(BSTNode<E> node, int index, ArrayList<E> ascendingBST) {
+		Stack<BSTNode<E>> stack = new Stack<>();
+		BSTNode<E> temp = this.root;
+		while (temp != null || !stack.isEmpty()) {
+			//we gotta go to the left most node first 
+			while (temp != null) {
+				stack.push(temp);
+				temp = temp.left;
+			}
+			// we're null now, so we pop the stack and put that value into our arraylist
+			temp = stack.pop();
+			ascendingBST.add(temp.data);
+			// check if we're at the index we want
+			if (ascendingBST.size() - 1 == index) {
+				// this is the index we want to return
+				return ascendingBST.get(index);
+			}
+			// move to the right now
+			temp = temp.right;
+		}
+		// one last chance, see if we reached the index. 
 		return ascendingBST.get(index);
-    }
+	}
 
 
-    /**
-     * Return a List with all values in this Binary Search Tree that are less than
-     * the parameter <tt>value</tt>.
-     * <tt>value</tt> != null<br>
-     * @param value the cutoff value
-     * @return a List with all values in this tree that are less than the parameter value. If there are
-     * no values in this tree less than value return an empty list. The elements of the list are in ascending order.
-     */
-    public List<E> getAllLessThan(E value) {
-    	if (value == null) {
-    		throw new IllegalArgumentException("Violation of Preconditions");
-    	}
-    	ArrayList<E> getAllLessThanVal = new ArrayList<>();
-    	if (this.root == null) {
-    		// we have an empty tree, can't return a list
-    		return getAllLessThanVal;
-    	}
-    	BSTNode<E> temp = root;
-        //search for the subtree less than the given value, then get all values in that subtree
-    	while (temp.left != null && value.compareTo(temp.data) < 0) {
-    		temp = temp.left;
-    	}
-    	if (value.compareTo(temp.data) < 0) {
-    		getAllHelper(temp, getAllLessThanVal);
-    	}
-        return getAllLessThanVal;
-    }
+	/**
+	 * Return a List with all values in this Binary Search Tree that are less than
+	 * the parameter <tt>value</tt>.
+	 * <tt>value</tt> != null<br>
+	 * @param value the cutoff value
+	 * @return a List with all values in this tree that are less than the parameter value. If there are
+	 * no values in this tree less than value return an empty list. The elements of the list are in ascending order.
+	 */
+	public List<E> getAllLessThan(E value) {
+		if (value == null) {
+			throw new IllegalArgumentException("Violation of Preconditions");
+		}
+		ArrayList<E> getAllLessThanVal = new ArrayList<>();
+		if (this.root == null) {
+			// we have an empty tree, can't return a list
+			return getAllLessThanVal;
+		}
+		// get the values that are less than the specified input
+		getAllLessThanHelper(this.root, getAllLessThanVal, value);
+		return getAllLessThanVal;
+	}
+
+	/*
+	 * Private helper method that returns an ArrayList of all of the values in the tree 
+	 * that is less than a specified value, and stops when we find our first value that is not
+	 * less than the given value
+	 */
+	private void getAllLessThanHelper(BSTNode<E> node, ArrayList<E> getAllLessThanVal, E value) {
+		Stack<BSTNode<E>> stack = new Stack<>();
+		BSTNode<E> temp = this.root;
+		while (temp != null || !stack.isEmpty()) {
+			//we gotta go to the left most node first 
+			while (temp != null) {
+				stack.push(temp);
+				temp = temp.left;
+			}
+			// we're null now, so we pop the stack and see if its less than val
+			temp = stack.pop();
+			if (value.compareTo(temp.data) > 0) {
+				getAllLessThanVal.add(temp.data);
+			} else {
+				// we're done finding all values less than. leave early
+				return;
+			}
+			temp = temp.right;
+		}    	
+	}
 
 
-    /**
-     * Return a List with all values in this Binary Search Tree that are greater than
-     * the parameter <tt>value</tt>.
-     * <tt>value</tt> != null<br>
-     * @param value the cutoff value
-     * @return a List with all values in this tree that are greater than the parameter value. If there are
-     * no values in this tree greater than value return an empty list. The elements of the list are in ascending order.
-     */
-    public List<E> getAllGreaterThan(E value) {
-    	if (value == null) {
-    		throw new IllegalArgumentException("Violation of Preconditions");
-    	}
-    	ArrayList<E> getAllGreaterThanVal = new ArrayList<>();
-    	if (this.root == null) {
-    		// we have an empty tree, can't return a list
-    		return getAllGreaterThanVal;
-    	}
-    	BSTNode<E> temp = root;
-        //search for the subtree greater than the given value, then get all values in that subtree
-    	while (temp.right != null && value.compareTo(temp.data) > 0) {
-    		temp = temp.right;
-    	}
-    	getAllHelper(temp, getAllGreaterThanVal);
-        return getAllGreaterThanVal;
-    }
+	/**
+	 * Return a List with all values in this Binary Search Tree that are greater than
+	 * the parameter <tt>value</tt>.
+	 * <tt>value</tt> != null<br>
+	 * @param value the cutoff value
+	 * @return a List with all values in this tree that are greater than the parameter value. If there are
+	 * no values in this tree greater than value return an empty list. The elements of the list are in ascending order.
+	 */
+	public List<E> getAllGreaterThan(E value) {
+		if (value == null) {
+			throw new IllegalArgumentException("Violation of Preconditions");
+		}
+		// a linkedList allows us to add to the front in constant time, which is what we need
+		LinkedList<E> getAllGreaterThanVal = new LinkedList<>();
+		if (this.root == null) {
+			// we have an empty tree, can't return a list
+			return getAllGreaterThanVal;
+		}
+		getAllGreaterThanHelper(this.root, getAllGreaterThanVal, value);
+		// values are reverse, need to swap em. 
+		return getAllGreaterThanVal;
+	}
+
+	/*
+	 * Private helper method that adds values to the front of the linkedList starting from the greatest 
+	 * value in the tree, until we reach the value that is no longer greater than our given parameter
+	 */
+	private void getAllGreaterThanHelper( BSTNode<E> node, LinkedList<E> getAllGreaterThanVal, E value) {
+		Stack<BSTNode<E>> stack = new Stack<>();
+		BSTNode<E> temp = this.root;
+		while (temp != null || !stack.isEmpty()) {
+			// move all the way to the right to the greatest value. 
+			while (temp != null) {
+				stack.push(temp);
+				temp = temp.right;
+			}
+			// we're null now, so we pop the stack and see if its greater than val
+			temp = stack.pop();
+			if (value.compareTo(temp.data) < 0) {
+				// use a LinkedList add front for constant time insertion
+				getAllGreaterThanVal.addFirst(temp.data);
+			} else {
+				// no more values, we can stop searching
+				return;
+			}
+			temp = temp.left;
+		}    
+	}
 
 
+	/**
+	 * Find the number of nodes in this tree at the specified depth.
+	 * <br>pre: none
+	 * @param d The target depth.
+	 * @return The number of nodes in this tree at a depth equal to
+	 * the parameter d.
+	 */
+	public int numNodesAtDepth(int d) {
+		return numNodesAtDepthHelper(this.root, d, 0);
+	}
 
-    /**
-     * Find the number of nodes in this tree at the specified depth.
-     * <br>pre: none
-     * @param d The target depth.
-     * @return The number of nodes in this tree at a depth equal to
-     * the parameter d.
-     */
-    public int numNodesAtDepth(int d) {
-        return numNodesAtDepthHelper(this.root, d, 0);
-    }
-    
-    private int numNodesAtDepthHelper(BSTNode<E> root, int depth, int currDepth) {
-    	int result = 0;
-    	if (root != null && currDepth == depth) {
-    		// we're at the specified depth, count this node
-    		result++;
-    		return result;
-    	} else if (root != null && currDepth < depth) {
-    		// we're not deep enough yet!
-    		result += numNodesAtDepthHelper(root.left, depth, currDepth + 1) + numNodesAtDepthHelper(root.right, depth, currDepth + 1);
-    		return result;
-    	}
-    	// we're not at the depth and our node is either null so we go no further, or we're past the specified depth
-    	return result;
-    }
+	/*
+	 * Private helper method that helps determines the number of nodes at a given Depth. 
+	 */
+	private int numNodesAtDepthHelper(BSTNode<E> root, int depth, int currDepth) {
+		int result = 0;
+		if (root != null && currDepth == depth) {
+			// we're at the specified depth, count this node
+			result++;
+			return result;
+		} else if (root != null && currDepth < depth) {
+			// we're not deep enough yet!
+			result += numNodesAtDepthHelper(root.left, depth, currDepth + 1) + numNodesAtDepthHelper(root.right, depth, currDepth + 1);
+			return result;
+		}
+		// we're not at the depth and our node is either null so we go no further, or we're past the specified depth
+		return result;
+	}
 
-    /**
-     * Prints a vertical representation of this tree.
-     * The tree has been rotated counter clockwise 90
-     * degrees. The root is on the left. Each node is printed
-     * out on its own row. A node's children will not necessarily
-     * be at the rows directly above and below a row. They will
-     * be indented three spaces from the parent. Nodes indented the
-     * same amount are at the same depth.
-     * <br>pre: none
-     */
-    public void printTree() {
-        printTree(root, "");
-    }
+	/**
+	 * Prints a vertical representation of this tree.
+	 * The tree has been rotated counter clockwise 90
+	 * degrees. The root is on the left. Each node is printed
+	 * out on its own row. A node's children will not necessarily
+	 * be at the rows directly above and below a row. They will
+	 * be indented three spaces from the parent. Nodes indented the
+	 * same amount are at the same depth.
+	 * <br>pre: none
+	 */
+	public void printTree() {
+		printTree(root, "");
+	}
 
-    private void printTree(BSTNode<E> n, String spaces) {
-        if(n != null){
-            printTree(n.getRight(), spaces + "  ");
-            System.out.println(spaces + n.getData());
-            printTree(n.getLeft(), spaces + "  ");
-        }
-    }
+	/**
+	 * Private helper class that prints an ASCII tree for debugging purposes
+	 */
+	private void printTree(BSTNode<E> n, String spaces) {
+		if(n != null){
+			printTree(n.getRight(), spaces + "  ");
+			System.out.println(spaces + n.getData());
+			printTree(n.getLeft(), spaces + "  ");
+		}
+	}
 
-    private static class BSTNode<E extends Comparable<? super E>> {
-        private E data;
-        private BSTNode<E> left;
-        private BSTNode<E> right;
 
-        public BSTNode() {
-            this(null);
-        }
+	/**
+	 * 
+	 * @author Mike Scott
+	 *
+	 * nested BSTNode class that holds the nodes that stores the data for each individual part of the 
+	 * Binary Search Tree
+	 */
+	private static class BSTNode<E extends Comparable<? super E>> {
+		private E data;
+		private BSTNode<E> left;
+		private BSTNode<E> right;
 
-        public BSTNode(E initValue) {
-            this(null, initValue, null); 
-        }
+		public BSTNode() {
+			this(null);
+		}
 
-        public BSTNode(BSTNode<E> initLeft,
-                E initValue,        
-                BSTNode<E> initRight) {
-            data = initValue; 
-            left = initLeft; 
-            right = initRight; 
-        }
+		public BSTNode(E initValue) {
+			this(null, initValue, null); 
+		}
 
-        public E getData() { 
-            return data; 
-        }
+		public BSTNode(BSTNode<E> initLeft,
+				E initValue,        
+				BSTNode<E> initRight) {
+			data = initValue; 
+			left = initLeft; 
+			right = initRight; 
+		}
 
-        public BSTNode<E> getLeft() { 
-            return left;
-        }
+		public E getData() { 
+			return data; 
+		}
 
-        public BSTNode<E> getRight() { 
-            return right; 
-        }
+		public BSTNode<E> getLeft() { 
+			return left;
+		}
 
-        public void setData(E theNewValue) { 
-            data = theNewValue; 
-        }
+		public BSTNode<E> getRight() { 
+			return right; 
+		}
 
-        public void setLeft(BSTNode<E> theNewLeft) { 
-            left = theNewLeft; 
-        }
+		public void setData(E theNewValue) { 
+			data = theNewValue; 
+		}
 
-        public void setRight(BSTNode<E> theNewRight) { 
-            right = theNewRight; 
-        }    
-    }
+		public void setLeft(BSTNode<E> theNewLeft) { 
+			left = theNewLeft; 
+		}
+
+		public void setRight(BSTNode<E> theNewRight) { 
+			right = theNewRight; 
+		}    
+	}
 }
