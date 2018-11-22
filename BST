@@ -11,7 +11,6 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Stack;
 
 /**
@@ -59,23 +58,25 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
     	}
     }
     
-    public boolean addHelper(BSTNode<E> root, E value) {
-    	// we've found a spot in our BST that this value belongs to
-    	if (root == null) {
-    		root = new BSTNode<>(value);
-    		size++;
-            return true;
-    	} else {
-    		// otherwise, move in the direction to add the value to our BST
-        	// compare the roots data to the value, and move left or right accordingly. 
-    		if (root.data.compareTo(value) == 0) {
-    			// value is in the tree, do nothing. 
-    			return false;
-    		} else if (root.data.compareTo(value) < 0) {
-    			return addHelper(root.left, value);
-    		} else {
-    			return addHelper(root.right, value);
+    public boolean addHelper(BSTNode<E> node, E value) {  
+    	// compare the roots data to the value, and move left or right accordingly.  
+    	if (node.data.compareTo(value) == 0) {
+    		// value is in the tree, do nothing. 
+    		return false;
+    	} else if (value.compareTo(node.data) < 0) {
+    		if (node.left == null) {
+    			node.left = new BSTNode<>(value);
+    			size++;
+    			return true;
     		}
+    		return addHelper(node.left, value);
+    	} else {
+    		if (node.right == null) {
+    			node.right = new BSTNode<>(value);
+    			size++;
+    			return true;
+    		}
+    		return addHelper(node.right, value);
     	}
     }
 
@@ -90,8 +91,96 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
      *  returns true if value was present and size() = old size() - 1
      */
     public boolean remove(E value) {
-        return true;
+    	if (value == null) {
+    		throw new IllegalArgumentException("Violation of preconditions");
+    	}
+    	if (this.root == null) {
+    		// tree is empty, can't remove it. 
+    		return false;
+    	}
+        return removeHelper(this.root, value);
     }
+    
+    private boolean removeHelper(BSTNode<E> node, E value) {
+    	BSTNode<E> nodeToRemove = getNodeToRemove(node, value);
+    	// case one, the node we want to remove is childless
+    	if (nodeToRemove == null) {
+    		// means the value to remove is not in the tree, can't remove something thats not in the tree
+    		return false;
+    	} else {
+    		if (nodeToRemove.left == null && nodeToRemove.right == null) {
+    			// this is a leaf node, use parent to remove it. 
+    			BSTNode<E> parent = getParent(this.root, value);
+    			if (parent.right != null && parent.right.data.equals(nodeToRemove.data)) {
+    				parent.right = null;
+    			} else {
+    				parent.left = null;
+    			}
+    		} else if (nodeToRemove.left == null || nodeToRemove.right == null) {
+    			// this is a node with a single child, swap the child and the parent
+    			E temp = nodeToRemove.left != null ? nodeToRemove.left.data : nodeToRemove.right.data;
+    			nodeToRemove.data = temp;
+    			nodeToRemove.left = null;
+    			nodeToRemove.right = null;
+    		} else {
+    			// this node has two children, swap with the largest value in the left subtree. 
+    			E newValue = maxSubtree(nodeToRemove.left);
+    			nodeToRemove.data = newValue;
+    			return removeHelper(nodeToRemove.left, newValue);
+    		}
+    		size--;
+    		return true;
+    	}
+    }
+    
+    private E maxSubtree(BSTNode<E> node) {
+    	BSTNode<E> temp = node;
+    	// go to the right most subtree to get the max value
+    	while (temp.right != null) {
+    		temp = temp.right;
+    	}
+        return temp.data;
+    }
+    
+    /**
+     * 
+     * @param value is the data of the Node that we are searching for
+     * @return the node we're looking to remove
+     */
+    private BSTNode<E> getNodeToRemove(BSTNode<E> node, E value) {
+    	if (node == null) {
+    		// We fell off the tree, the node to remove isnt here. 
+    		return null;
+    	} else if (node.data.compareTo(value) == 0) {
+    		// We found the node we want to remove
+    		return node;
+    	} else if (value.compareTo(node.data) < 0) {
+    		return getNodeToRemove(node.left, value);
+    	} else {
+    		return getNodeToRemove(node.right, value);
+    	}
+    }
+    
+    private BSTNode<E> getParent(BSTNode<E> node, E value) {
+    	if (node == null) {
+    		// We fell off the tree, the node to remove isnt here. 
+    		return null;
+    	} 
+    	if (node.data.equals(this.root.data)) {
+    		return this.root;
+    	}
+    	if (value.compareTo(node.data) < 0) {
+    		if (node.left != null && value.compareTo(node.left.data) == 0) {
+    			return node;
+    		}
+    		return getParent(node.left, value);
+    	} else {
+    		if (node.right != null && value.compareTo(node.left.data) == 0) {
+    			return node;
+    		}
+    		return getParent(node.right, value);
+    	}
+    } 
 
 
     /**
@@ -106,20 +195,20 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
         return isPresentHelper(this.root, value);
     }
     
-    public boolean isPresentHelper(BSTNode<E> root, E value) {
+    public boolean isPresentHelper(BSTNode<E> node, E value) {
     	// base case, the node is null, meaning the data is not in the tree 
-    	if (root == null) {
+    	if (node == null) {
     		return false;
     	} else {
-    		if (root.data.compareTo(value) == 0) {
+    		if (value.compareTo(node.data) == 0) {
     			// this is the value we were looking for!
     			return true;
-    		} else if (root.data.compareTo(value) < 0) {
+    		} else if (value.compareTo(node.data) < 0) {
     			// check the left subtree
-    			return isPresentHelper(root.left, value);
+    			return isPresentHelper(node.left, value);
     		} else {
     			// check the right subtree
-    			return isPresentHelper(root.right, value);
+    			return isPresentHelper(node.right, value);
     		}
     	}
     }
@@ -158,15 +247,18 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
     	}
     }
     
-    private int heightHelper(BSTNode<E> root) {
+    private int heightHelper(BSTNode<E> node) {
     	int result = 0;
-    	if (root == null) {
-    		// this is a dead end, no more depth to this tree
-    		return result;
+    	if (node == null) {
+    		// we reached a dead end
+    		return 0;
+    	}else if (node.right == null && node.left == null) {
+    		// this is a leaf with no children
+    		return 0; 
     	} else {
     		result++;
     		// check the left and right subtree, and return the one with the greater height
-    		return result + Math.max(heightHelper(root.left), heightHelper(root.right));
+    		return result + Math.max(heightHelper(node.left), heightHelper(node.right));
     	}
     }
 
@@ -255,17 +347,19 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
     	stack.push(root);
     	while (!stack.isEmpty()) {
     		BSTNode<E> temp = stack.pop();
-    		if (temp.data.compareTo(data) < 0) {
+    		if (data.compareTo(temp.data) < 0) {
     			if (temp.left == null) {
     				// we found an empty spot
     				temp.left = new BSTNode<>(data);
+    				size++;
     				return true;
     			}
     			stack.push(temp.left);
-    		} else if (temp.data.compareTo(data) > 0) {
+    		} else if (data.compareTo(temp.data) > 0) {
     			if (temp.right == null) {
     				// we found an empty spot
     				temp.right = new BSTNode<>(data);
+    				size++;
     				return true;
     			}
     			stack.push(temp.right);
@@ -285,22 +379,35 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
      * @return the kth value in this Binary Search Tree
      */
     public E get(int kth) {
-        return getHelper(root, kth);
+    	if (kth < 0 || kth >= size()) {
+    		throw new IllegalArgumentException("Violation of Preconditions");
+    	}
+    	ArrayList<E> ascendingBST = new ArrayList<>();
+        return getHelper(this.root, kth, ascendingBST);
     }
     
-    private E getHelper(BSTNode<E> root, int index) {
-    	ArrayList<E> ascendingBST = new ArrayList<>();
-    	if (root.left != null) {
-    		getHelper(root.left, index);
-    	} 
-    	ascendingBST.add(root.data);
-    	if (ascendingBST.size() - 1 == index) {
-    		return ascendingBST.get(index);
+    private E getHelper(BSTNode<E> node, int index, ArrayList<E> ascendingBST) {
+    	Stack<BSTNode<E>> stack = new Stack<>();
+    	BSTNode<E> temp = this.root;
+    	while (temp != null || !stack.isEmpty()) {
+    		//we gotta go to the left most node first 
+    		while (temp != null) {
+    			stack.push(temp);
+    			temp = temp.left;
+    		}
+    		// we're null now, so we pop the stack and put that value into our arraylist
+    		temp = stack.pop();
+    		ascendingBST.add(temp.data);
+    		// check if we're at the index we want
+    		if (ascendingBST.size() - 1 == index) {
+    			// this is the index we want to return
+    			return ascendingBST.get(index);
+    		}
+    		// move to the right now
+    		temp = temp.right;
     	}
-    	if (root.right != null) {
-    		getHelper(root.right, index);
-    	}
-    	return ascendingBST.get(index);
+    	// one last chance, see if we reached the index. 
+		return ascendingBST.get(index);
     }
 
 
@@ -313,13 +420,22 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
      * no values in this tree less than value return an empty list. The elements of the list are in ascending order.
      */
     public List<E> getAllLessThan(E value) {
-    	BSTNode<E> temp = root;
-        //search for the subtree less than the given value, then get all values in that subtree
-    	while (temp != null && temp.data.compareTo(value) < 0) {
-    		temp = temp.left;
+    	if (value == null) {
+    		throw new IllegalArgumentException("Violation of Preconditions");
     	}
     	ArrayList<E> getAllLessThanVal = new ArrayList<>();
-    	getAllHelper(temp, getAllLessThanVal);
+    	if (this.root == null) {
+    		// we have an empty tree, can't return a list
+    		return getAllLessThanVal;
+    	}
+    	BSTNode<E> temp = root;
+        //search for the subtree less than the given value, then get all values in that subtree
+    	while (temp.left != null && value.compareTo(temp.data) < 0) {
+    		temp = temp.left;
+    	}
+    	if (value.compareTo(temp.data) < 0) {
+    		getAllHelper(temp, getAllLessThanVal);
+    	}
         return getAllLessThanVal;
     }
 
@@ -333,12 +449,19 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
      * no values in this tree greater than value return an empty list. The elements of the list are in ascending order.
      */
     public List<E> getAllGreaterThan(E value) {
-    	BSTNode<E> temp = root;
-        //search for the subtree greater than the given value, then get all values in that subtree
-    	while (temp != null && temp.data.compareTo(value) > 0) {
-    		temp = temp.right;
+    	if (value == null) {
+    		throw new IllegalArgumentException("Violation of Preconditions");
     	}
     	ArrayList<E> getAllGreaterThanVal = new ArrayList<>();
+    	if (this.root == null) {
+    		// we have an empty tree, can't return a list
+    		return getAllGreaterThanVal;
+    	}
+    	BSTNode<E> temp = root;
+        //search for the subtree greater than the given value, then get all values in that subtree
+    	while (temp.right != null && value.compareTo(temp.data) > 0) {
+    		temp = temp.right;
+    	}
     	getAllHelper(temp, getAllGreaterThanVal);
         return getAllGreaterThanVal;
     }
@@ -353,7 +476,22 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
      * the parameter d.
      */
     public int numNodesAtDepth(int d) {
-        return -1;
+        return numNodesAtDepthHelper(this.root, d, 0);
+    }
+    
+    private int numNodesAtDepthHelper(BSTNode<E> root, int depth, int currDepth) {
+    	int result = 0;
+    	if (root != null && currDepth == depth) {
+    		// we're at the specified depth, count this node
+    		result++;
+    		return result;
+    	} else if (root != null && currDepth < depth) {
+    		// we're not deep enough yet!
+    		result += numNodesAtDepthHelper(root.left, depth, currDepth + 1) + numNodesAtDepthHelper(root.right, depth, currDepth + 1);
+    		return result;
+    	}
+    	// we're not at the depth and our node is either null so we go no further, or we're past the specified depth
+    	return result;
     }
 
     /**
