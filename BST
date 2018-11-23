@@ -100,6 +100,11 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
 		if (this.root == null) {
 			// tree is empty, can't remove it. 
 			return false;
+		} else if (size() == 1) {
+			// We need to remove the root node, and its the only node in the tree
+			this.root = null;
+			size--;
+			return true;
 		}
 		return removeHelper(this.root, value);
 	}
@@ -114,9 +119,9 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
 			// means the value to remove is not in the tree, can't remove something thats not in the tree
 			return false;
 		} else {
+			BSTNode<E> parent = getParent(this.root, value);
 			if (nodeToRemove.left == null && nodeToRemove.right == null) {
 				// this is a leaf node, use parent to remove it. 
-				BSTNode<E> parent = getParent(this.root, value);
 				// make parent set this node to null
 				if (parent.right != null && parent.right.data.equals(nodeToRemove.data)) {
 					parent.right = null;
@@ -125,11 +130,12 @@ public class BinarySearchTree<E extends Comparable<? super E>> {
 				}
 			} else if (nodeToRemove.left == null || nodeToRemove.right == null) {
 				// this is a node with a single child, swap the child and the parent
-				E temp = nodeToRemove.left != null ? nodeToRemove.left.data : nodeToRemove.right.data;
-				nodeToRemove.data = temp;
-				// make the node have no childrens. 
-				nodeToRemove.left = null;
-				nodeToRemove.right = null;
+				BSTNode<E> temp = nodeToRemove.left != null ? nodeToRemove.left : nodeToRemove.right;
+				if (parent.right != null && parent.right.data.equals(nodeToRemove.data)) {
+					parent.right = temp;
+				} else {
+					parent.left = temp;
+				}		
 			} else {
 				// this node has two children, swap with the largest value in the left subtree. 
 				E newValue = maxSubtree(nodeToRemove.left);
