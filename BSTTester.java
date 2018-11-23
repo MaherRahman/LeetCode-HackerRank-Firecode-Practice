@@ -76,7 +76,28 @@
 	
  * Question: For each value of N what is the minimum possible tree height, 
  * assuming N unique values are inserted into the tree?
- * 
+ * 	N					|					Minimum Possible Tree height
+ * --------------------------------------------------------------------------------
+ * 2000												~11
+ * --------------------------------------------------------------------------------
+ * 4000												~12
+ * --------------------------------------------------------------------------------
+ * 8000												~13
+ * --------------------------------------------------------------------------------
+ * 16000											~14
+ * --------------------------------------------------------------------------------
+ * 32000											~15
+ * --------------------------------------------------------------------------------
+ * 64000											~16
+ * --------------------------------------------------------------------------------
+ * 128000											~17
+ * --------------------------------------------------------------------------------
+ * 256000											~18
+ * --------------------------------------------------------------------------------
+ * 512000											~19
+ * --------------------------------------------------------------------------------
+ * 1024000											~20
+ * --------------------------------------------------------------------------------
  * Experiment 4: repeat experiment 3 but using TreeSet
  * 
 	  					   Treeset
@@ -124,6 +145,13 @@
 	Average size of the tree TreeSet for 1024000 elements: 1023876.5
 	
  * Question: What are the average times for TreeSet? How do they compare to your BST?
+ * 	They are around the same magnitude, however, the TreeSet seems to be slightly faster. 
+ * 	The Big O's are definitely the same, however, the TreeSets T(N) seems to be smaller
+ * 	This might be because the TreeSet isn't looking for Height, while my BinarySearchTree
+ * 	Class searches for height during the calculations. 
+ * 	Testing this hypothesis: When I comment out searching for the Height in my BST class, the times
+ * 	are actually faster than the TreeSets class! so the average times for the TreeSet is slower than my
+ * 	BST class when the playing field is even
  * 
  * Experiment 5: Generate a list of 1000 ints in sorted Integer, add the values into an empty BST
  * record the height
@@ -182,6 +210,14 @@
  * 
  * Question: How do these times compare to the times it took for you BinarySearchTree class when inserting 
  * integers in sorted order? What do you think is the cause for these differences?
+ * 	The times are incredibly different. The TreeSet is much more efficient in adding sorted values into the tree
+ * 	than my BST class is. I believe the difference is for my BST class, adding in only sorted values is essentially
+ * 	like adding values to a linkedList. It gets progressively worse. The TreeSet class might have a pointer to
+ * 	the last node added, so when you're adding values to the tree, you can simply do constant time addition of a
+ * 	new node by using the pointer of the previous node that you added. It'll make the addition incredibly quick
+ * 	and easy. You could have a pointer to the max value or the min value, so adding values to the end will be super
+ * 	easy and constant time like a linkedList. instead, with my solution, we constantly have to traverse the list
+ * 	before we add, making it an O(N) operation versus the TreeSet which seems to have an O(1) addition. 
  * 
  */
 
